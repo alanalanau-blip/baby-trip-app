@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>📱 3歲活潑BB·專屬放電行程App</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --sunny-color: #f39c12;
+            --rainy-color: #2980b9;
+            --bonus-color: #16a085;
+            --bg-color: #f4f6f9;
+        }
+        body { font-family: "PingFang HK", "Microsoft JhengHei", sans-serif; line-height: 1.5; background-color: var(--bg-color); color: #333; max-width: 600px; margin: 0 auto; padding: 10px 10px 80px 10px; }
+        h1 { text-align: center; color: var(--primary-color); font-size: 1.3em; margin-bottom: 5px; letter-spacing: 1px; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.85em; margin-bottom: 10px; }
+        .rule-box { background: #fff3e0; border: 1px dashed #e67e22; padding: 10px; border-radius: 8px; font-size: 0.85em; color: #d35400; margin-bottom: 15px; font-weight: bold; text-align: center;}
+        
+        details { background: #fff; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; }
+        summary { font-size: 1.05em; font-weight: bold; color: var(--primary-color); padding: 16px 15px; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '▼'; font-size: 0.8em; color: #bdc3c7; transition: transform 0.3s; }
+        details[open] summary::after { transform: rotate(180deg); }
+        details[open] summary { border-bottom: 1px dashed #ecf0f1; background: #fafbfc; }
+        
+        .day-content { padding: 15px; background: #fafbfc; }
+        .hotel-tag { font-size: 0.75em; background: #e1b12c; color: white; padding: 4px 8px; border-radius: 12px; font-weight: normal; margin-left: 8px; }
+
+        .local-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #eef2f5; padding: 4px; border-radius: 8px; }
+        .local-btn { flex: 1; border: none; background: none; padding: 8px 2px; font-size: 0.85em; border-radius: 6px; cursor: pointer; color: #718093; font-weight: bold; }
+        .local-btn.active { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .local-btn.active[data-w="rec"] { color: var(--sunny-color); }
+        .local-btn.active[data-w="alt"] { color: var(--bonus-color); }
+        .local-btn.active[data-w="rain"] { color: var(--rainy-color); }
+
+        .weather-content { display: none; animation: fadeIn 0.3s ease; }
+        .weather-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .time-row { background: #fff; border: 1px solid #edf2f7; border-left: 4px solid #3498db; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: all 0.3s ease; }
+        .time-header { display: flex; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+        .time-tag { background: #e1f0fa; color: #2980b9; font-weight: 800; font-size: 0.85em; padding: 4px 8px; border-radius: 6px; }
+        .action-title { font-size: 1.05em; font-weight: bold; color: #2c3e50; }
+        .action-desc { font-size: 0.9em; color: #5f6a7d; line-height: 1.5; margin-top: 4px; }
+        
+        .time-row[data-type="nap"] { border-left-color: #9b59b6; background: #faf5ff; }
+        .time-row[data-type="nap"] .time-tag { background: #f3e8ff; color: #8e44ad; }
+        .time-row[data-type="nap"] .action-title { color: #8e44ad; }
+        
+        .important-alert { background: #fff2f2; border: 1px solid #fbc4c4; color: #c0392b; padding: 10px; border-radius: 8px; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; display: flex; gap: 8px;}
+        .checklist-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.95em; padding-bottom: 8px; border-bottom: 1px solid #f1f2f6; }
+        .checklist-item input[type="checkbox"] { width: 22px; height: 22px; margin-right: 12px; accent-color: var(--primary-color); }
+        
+        .time-row.active-time { background-color: #fffdf0 !important; border-left-color: #f1c40f !important; box-shadow: 0 2px 8px rgba(241, 196, 15, 0.2); transform: scale(1.02); }
+        .time-row.active-time .time-tag { background: #f1c40f; color: #fff; }
+
+        /* ====== 新增：互動式標籤與 Modal 彈出視窗樣式 ====== */
+        .place-link { color: #2980b9; text-decoration: underline; text-decoration-style: dotted; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px; border-radius: 4px; transition: background 0.2s;}
+        .place-link:active { background: #e1f0fa; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(3px); }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-box { background: #fff; width: 85%; max-width: 400px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 1.3em; font-weight: bold; color: var(--primary-color); margin-bottom: 12px; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px;}
+        .modal-desc { font-size: 0.95em; color: #555; margin-bottom: 24px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 10px; margin-bottom: 10px;}
+        .btn-map { flex: 1; background: #27ae60; color: #fff; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.95em;}
+        .btn-search { flex: 1; background: #f39c12; color: #fff; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.95em;}
+        .btn-close { width: 100%; background: #ecf0f1; color: #7f8c8d; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.95em;}
+    </style>
+</head>
+<body>
+
+    <h1>🚀 3歲活潑BB·專屬放電行程</h1>
+    <div class="subtitle">每日最多：1個大活動 + 1個中活動 + 1個短活動</div>
+    <div class="rule-box">💡 點擊帶有「ℹ️」的景點，即可開啟 Google Maps 與詳細介紹！</div>
+
+    <!-- 裝備庫 -->
+    <details id="checklist-card">
+        <summary>🎒 每日出門前：隨身裝備點點名</summary>
+        <div class="day-content">
+            <div class="important-alert"><span>⚠️</span><span>每天出門前，請務必將以下物品塞入隨身媽媽包：</span></div>
+            <label class="checklist-item"><input type="checkbox" id="chk-1"> <span><b>大人和細路的襪子</b> <br><small style="color:#7f8c8d;">(室內遊戲室必穿)</small></span></label>
+            <label class="checklist-item"><input type="checkbox" id="chk-2"> <span>BB 車防雨罩 + 輕便雨傘</span></label>
+            <label class="checklist-item"><input type="checkbox" id="chk-3"> <span>防曬帽 + 幼兒防曬乳 + 小風扇</span></label>
+            <label class="checklist-item"><input type="checkbox" id="chk-4"> <span>至少兩套後備衣物 + 濕紙巾</span></label>
+            <label class="checklist-item"><input type="checkbox" id="chk-5"> <span>小食及保溫水樽</span></label>
+        </div>
+    </details>
+
+    <!-- Day 1 -->
+    <details class="day-card" open>
+        <summary>Day 1｜抵達基隆適應日 <span class="hotel-tag">宿: 金華</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">⭐ 推薦組合</button>
+                <button class="local-btn" data-w="alt">🔀 其他選項</button>
+            </div>
+            <div class="weather-content rec active">
+                <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">14:00-16:00</span> <span class="action-title place-link" data-name="基隆金華飯店" data-desc="抵達台灣的第一站。讓剛下飛機的BB在這裡玩耍、沖涼或午睡，慢慢適應環境，避免一開始就過度疲勞。">🏨 酒店 Check-in & 休息 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">16:30-17:30</span> <span class="action-title place-link" data-name="基隆廟口夜市" data-desc="台灣著名夜市之一！建議提早於人流真空期到達，推薦必食：營養三明治、陳紀泡泡冰，有助於瞬間降溫。">🍧 廟口夜市早場 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">17:45-18:30</span> <span class="action-title place-link" data-name="基隆海洋廣場" data-desc="一片極安全的平坦大空地，非常適合 3 歲 BB 奔跑、看大郵輪和老鷹，完全不費家長體力。">🦅 海洋廣場短行 ℹ️</span></div>
+                </div>
+            </div>
+            <div class="weather-content alt">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">14:00-16:00</span> <span class="action-title place-link" data-name="基隆東岸廣場" data-desc="若酒店尚未能入住，可來此大型商場。具備完善冷氣、餐廳及洗手間，非常適合帶幼童休息。">🏬 未有房備案 (東岸廣場) ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 2 -->
+    <details class="day-card">
+        <summary>Day 2｜冷氣親子日 <span class="hotel-tag">宿: 金華</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">⭐ 推薦組合</button>
+                <button class="local-btn" data-w="rain">🌧️ 雨天/室內</button>
+            </div>
+            <div class="weather-content rec active">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-11:30</span> <span class="action-title place-link" data-name="國立海洋科技博物館 兒童廳" data-desc="專為幼童設計的全冷氣放電天堂！內有超大型溜滑梯與模擬漁船互動裝置，建議略過靜態文宣，直衝兒童廳。">🐳 海科館兒童廳 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">12:45-14:00</span> <span class="action-title place-link" data-name="潮境智能海洋館 i OCEAN" data-desc="結合高科技投影的現代海洋館。巨型水族箱和互動視覺體驗，能有效吸引活潑BB注意力，達到物理降溫與安撫效果。">🪼 i OCEAN 潮境智能館 ℹ️</span></div>
+                </div>
+                <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">14:30-16:00</span> <span class="action-title">🛌 酒店午睡休息</span></div>
+                    <div class="action-desc">搭的士回酒店避開午後暴雨。</div>
+                </div>
+            </div>
+            <div class="weather-content rain">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-14:00</span> <span class="action-title place-link" data-name="國立海洋科技博物館" data-desc="外面大雷雨時，請實行「不轉場策略」。海科館面積極大，足以讓一家人舒服地玩滿5個小時。">🏛️ 全日留守海科館 ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 3 -->
+    <details class="day-card">
+        <summary>Day 3｜和平島玩水 <span class="hotel-tag">宿: 金華</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">⭐ 推薦組合</button>
+                <button class="local-btn" data-w="alt">🔀 惡劣天氣</button>
+            </div>
+            <div class="weather-content rec active">
+                 <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:00-10:30</span> <span class="action-title place-link" data-name="和平島地質公園 親親水池" data-desc="天然海水與安全沙灘！水力放電對3歲BB極為有效，玩60–90分鐘足以徹底耗盡體力。（記得準備防曬與後備衣物）">🏖️ 和平島親親水池 ℹ️</span></div>
+                 </div>
+                 <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">13:00-15:30</span> <span class="action-title">🛌 酒店午睡</span></div>
+                    <div class="action-desc">玩水後極需要補眠，防止 Overtired 導致大崩潰。</div>
+                 </div>
+                 <div class="time-row">
+                    <div class="time-header"><span class="time-tag">16:30-17:30</span> <span class="action-title place-link" data-name="正濱漁港彩色屋" data-desc="號稱「台版威尼斯」。適合黃昏陽光溫和時來打卡拍照，並在岸邊Cafe食雪糕，作為晚餐前的輕鬆過渡。">📸 正濱彩色屋 ℹ️</span></div>
+                 </div>
+            </div>
+            <div class="weather-content alt">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:00-11:30</span> <span class="action-title place-link" data-name="野柳海洋世界" data-desc="若遇長浪警報導致水池關閉的完美備案。全室內觀賞海豚與海獅表演。">🐬 備案：野柳海洋世界 ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 4 -->
+    <details class="day-card">
+        <summary>Day 4｜轉移台北 + 恐龍館 <span class="hotel-tag">宿: 禾順</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">⭐ 推薦組合</button>
+            </div>
+            <div class="weather-content rec active">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-11:00</span> <span class="action-title place-link" data-name="台北 禾順行旅" data-desc="強烈建議包車直達酒店寄存行李！拒絕推BB車兼拿行李在台北車站地下街與人潮博弈。">🚕 包車/的士去台北 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">13:00-14:30</span> <span class="action-title place-link" data-name="土銀展示館 古生物館" data-desc="BB車極度友善的平路展館。巨大的恐龍骨架能讓3歲BB感到新奇，同時全家人享受極凍冷氣。">🦖 土銀展示館 (恐龍館) ℹ️</span></div>
+                </div>
+                <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">15:30-17:00</span> <span class="action-title">🛌 酒店 Check-in & 午睡</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">17:30-18:30</span> <span class="action-title place-link" data-name="艋舺夜市 廣州街夜市" data-desc="鄰近萬華區酒店。食完即返酒店休息，讓跨縣市移動的疲勞歸零。">🍢 龍山寺附近早晚餐 ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 5 -->
+    <details class="day-card">
+        <summary>Day 5｜高能親子日 <span class="hotel-tag">宿: 禾順</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">Route A (推薦)</button>
+                <button class="local-btn" data-w="rain">Route B (雨天)</button>
+            </div>
+            <div class="weather-content rec active">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-11:30</span> <span class="action-title place-link" data-name="台北市立兒童新樂園" data-desc="買「一日票」。專為幼童設計，3歲BB可暢玩旋轉木馬、摩天輪等溫和設施，園區內更有大片沙坑專注感官放電。">🎡 兒童新樂園 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">12:30-15:00</span> <span class="action-title place-link" data-name="國立台灣科學教育館" data-desc="就在兒童新樂園旁，無須長途轉場。B1層有大型木製積木與室內攀爬網，大人可在沙發區冷氣防禦。">🔬 台灣科學教育館 ℹ️</span></div>
+                </div>
+                <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">15:00-16:30</span> <span class="action-title">🛌 完美接駁車上午睡</span></div>
+                    <div class="action-desc">叫的士直接開回酒店，讓 BB 在車上秒睡。</div>
+                </div>
+            </div>
+            <div class="weather-content rain">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">全天</span> <span class="action-title place-link" data-name="美麗華百樂園" data-desc="強烈陣雨或暴曬的最佳避難所。商場行街、Food Court食飯一次解決。">🏬 雨天備案 (美麗華) ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 6 -->
+    <details class="day-card">
+        <summary>Day 6｜天文館 / 淡水 <span class="hotel-tag">宿: 禾順</span></summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">Route A (淡水)</button>
+                <button class="local-btn" data-w="rain">Route B (大雨)</button>
+            </div>
+            <div class="weather-content rec active">
+                 <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-12:00</span> <span class="action-title place-link" data-name="台北市立天文科學教育館" data-desc="帶BB坐全室內軌道的『宇宙探險車』！像坐機動遊戲一樣興奮，且完全不受外面暴曬影響。">🚀 天文館 宇宙探險車 ℹ️</span></div>
+                 </div>
+                 <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">13:30-14:30</span> <span class="action-title">🛌 捷運紅線長途補眠</span></div>
+                    <div class="action-desc">由士林直達淡水。把 BB 放進BB車，在搖晃與冷氣車廂中睡優質午覺。</div>
+                 </div>
+                 <div class="time-row">
+                    <div class="time-header"><span class="time-tag">15:00-17:30</span> <span class="action-title place-link" data-name="淡水漁人碼頭 情人橋" data-desc="選擇寬闊平坦的河邊平路推車。搭渡輪前往漁人碼頭欣賞夕陽，此時微風徐徐最舒服。">🌅 淡水河畔與漁人碼頭 ℹ️</span></div>
+                 </div>
+            </div>
+            <div class="weather-content rain">
+                 <div class="time-row">
+                    <div class="time-header"><span class="time-tag">15:00+</span> <span class="action-title place-link" data-name="滬尾藝文休閒園區" data-desc="去到淡水若突降暴雨的救命錦囊！全冷氣商場內有兒童室內球池。">🌧️ 淡水雨天備案 (禮萊廣場) ℹ️</span></div>
+                 </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- Day 7 -->
+    <details class="day-card">
+        <summary>Day 7｜親子館 ⇄ 機場 ✈️</summary>
+        <div class="day-content">
+            <div class="local-tabs">
+                <button class="local-btn active" data-w="rec">⭐ 推薦組合</button>
+            </div>
+            <div class="weather-content rec active">
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">09:30-11:00</span> <span class="action-title place-link" data-name="萬華親子館" data-desc="最後的瘋狂放電！先衝戶外交通賽車區，變熱後立刻移入全冷氣室內玩具區。（緊記帶護照與穿襪子）">🚗 萬華親子館 ℹ️</span></div>
+                </div>
+                <div class="time-row">
+                    <div class="time-header"><span class="time-tag">11:15-12:15</span> <span class="action-title place-link" data-name="周記肉粥店" data-desc="龍山寺老字號美食，迅速補充體力。">🥣 龍山寺周邊午餐 ℹ️</span></div>
+                </div>
+                <div class="time-row" data-type="nap">
+                    <div class="time-header"><span class="time-tag">13:00-14:15</span> <span class="action-title place-link" data-name="台灣桃園國際機場 第一航廈" data-desc="強烈建議包車直達機場！活潑BB此時必定極度疲累，讓他們在車上進行最後一輪深度補眠。">🚕 包車直達機場 ℹ️</span></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <!-- 動態資訊彈出視窗 Modal -->
+    <div id="infoModal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div id="m-title" class="modal-title">景點名稱</div>
+            <div id="m-desc" class="modal-desc">景點詳細說明將顯示在這裡。</div>
+            <div class="modal-actions">
+                <a id="m-map" href="#" target="_blank" class="btn-map">🗺️ Google 地圖導航</a>
+                <a id="m-search" href="#" target="_blank" class="btn-search">🔍 網路搜尋更多</a>
+            </div>
+            <button class="btn-close" onclick="closeModal()">關閉視窗</button>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           1. 天氣按鈕同步切換
+           ========================================= */
+        document.querySelectorAll('.day-card').forEach(card => {
+            const buttons = card.querySelectorAll('.local-btn');
+            const contents = card.querySelectorAll('.weather-content');
+            buttons.forEach((btn, index) => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    buttons.forEach(b => b.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    if(contents[index]) contents[index].classList.add('active');
+                });
+            });
+        });
+
+        /* =========================================
+           2. 互動式 Modal 視窗功能與 Google Maps 連結
+           ========================================= */
+        const modal = document.getElementById('infoModal');
+        const modalTitle = document.getElementById('m-title');
+        const modalDesc = document.getElementById('m-desc');
+        const mapLink = document.getElementById('m-map');
+        const searchLink = document.getElementById('m-search');
+
+        // 綁定所有帶有 place-link class 的景點
+        document.querySelectorAll('.place-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.stopPropagation(); // 防止摺疊卡片縮起
+                
+                // 抓取設定在 HTML 中的資料
+                const name = link.getAttribute('data-name');
+                const desc = link.getAttribute('data-desc');
+                
+                // 寫入 Modal
+                modalTitle.innerText = name;
+                modalDesc.innerText = desc;
+                
+                // 動態生成 API URL
+                mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+                searchLink.href = `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+                
+                // 顯示動畫
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('show'), 10);
+            });
+        });
+
+        // 關閉 Modal 的函數
+        function closeModal() {
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        /* =========================================
+           3. 手風琴單一展開
+           ========================================= */
+        const detailsElements = document.querySelectorAll('details.day-card');
+        detailsElements.forEach(targetDetail => {
+            const summary = targetDetail.querySelector('summary');
+            if(summary) {
+                summary.addEventListener('click', () => {
+                    detailsElements.forEach(detail => {
+                        if (detail !== targetDetail && detail.hasAttribute('open')) {
+                            detail.removeAttribute('open');
+                        }
+                    });
+                });
+            }
+        });
+
+        /* =========================================
+           4. 自動時間高亮
+           ========================================= */
+        function highlightCurrentTime() {
+            const now = new Date();
+            const currentTime = now.getHours() + (now.getMinutes() / 60);
+
+            document.querySelectorAll('.time-row').forEach(row => {
+                const timeTag = row.querySelector('.time-tag');
+                if(timeTag) {
+                    const text = timeTag.innerText;
+                    let start = 0, end = 24;
+                    
+                    if(text.includes('-')) {
+                        const parts = text.split('-');
+                        start = parseTimeStr(parts[0]);
+                        end = parseTimeStr(parts[1]);
+                    } else if(text.includes('+')) {
+                        start = parseTimeStr(text.replace('+', ''));
+                        end = 24;
+                    }
+
+                    if(start !== -1 && currentTime >= start && currentTime < end) {
+                        row.classList.add('active-time');
+                    } else {
+                        row.classList.remove('active-time');
+                    }
+                }
+            });
+        }
+
+        function parseTimeStr(str) {
+            const parts = str.match(/(\d+):(\d+)/);
+            if(parts) {
+                return parseInt(parts[1], 10) + parseInt(parts[2], 10)/60;
+            }
+            return -1;
+        }
+
+        highlightCurrentTime();
+        setInterval(highlightCurrentTime, 60000);
+    </script>
+</body>
+</html>
